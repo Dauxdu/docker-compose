@@ -1,0 +1,42 @@
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole
+    hostname: docker-pihole
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 80:80/tcp
+    environment:
+      WEBPASSWORD_FILE: /run/secrets/PIHOLE_PASSWORD
+      PIHOLE_DNS_: 1.1.1.1;1.0.0.1;9.9.9.11;149.112.112.11
+      PIHOLE_DOMAIN: YOUR_DOMAIN
+      WEBTHEME: default-dark
+      DNSMASQ_USER: root
+      DNSMASQ_LISTENING: single
+    secrets:
+      - PIHOLE_PASSWORD
+    volumes:
+      - pihole:/etc/pihole
+      - dnsmasq.d:/etc/dnsmasq.d
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - lan
+    restart: always
+
+secrets:
+  PIHOLE_PASSWORD:
+    file: ./secrets/PIHOLE_PASSWORD
+
+volumes:
+  pihole: {}
+  dnsmasq.d: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24

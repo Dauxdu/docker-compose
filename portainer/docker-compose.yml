@@ -1,0 +1,37 @@
+services:
+  container_name: portainer
+  image: portainer/portainer-ce
+  hostname: docker-portainer
+  ports:
+    - 8000:8000/tcp
+    - 9443:9443/tcp
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - portainer:/data
+  networks:
+    - lan
+  restart: always
+
+  portainer-agent:
+    container_name: portainer-agent
+    image: portainer/agent
+    hostname: docker-portainer-agent
+    ports:
+      - 9001:9001/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - lan
+    restart: always
+
+volumes:
+  portainer: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24

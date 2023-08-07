@@ -1,0 +1,11 @@
+services:
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    hostname: docker-watchtower
+    command: --cleanup --rolling-restart --schedule "0 6 * * 5"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: always

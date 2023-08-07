@@ -1,0 +1,41 @@
+services:
+  rustdesk-server:
+    container_name: rustdesk-server
+    image: rustdesk/rustdesk-server-s6
+    hostname: docker-rustdesk
+    ports:
+      - 21115:21115/tcp
+      - 21116:21116/tcp
+      - 21116:21116/udp
+      - 21117:21117/tcp
+    environment:
+      RELAY: YOUR_DOMAIN:21117
+      ENCRYPTED_ONLY: 1
+      DB_URL: /db/db_v2.sqlite3
+      KEY_PRIV_FILE: /run/secrets/RUSTDESK_PRIV
+      KEY_PUB_FILE: /run/secrets/RUSTDESK_PUB
+    secrets:
+      - RUSTDESK_PRIV
+      - RUSTDESK_PUB
+    volumes:
+      - rustdesk:/db
+    networks:
+      - lan
+    restart: always
+
+secrets:
+  RUSTDESK_PRIV:
+    file: ./secrets/RUSTDESK_PRIV
+  RUSTDESK_PUB:
+    file: ./secrets/RUSTDESK_PUB
+
+volumes:
+  rustdesk: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24

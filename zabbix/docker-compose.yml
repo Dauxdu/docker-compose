@@ -1,0 +1,107 @@
+services:
+  zabbix-server:
+    container_name: zabbix-server
+    image: zabbix/zabbix-server-pgsql:alpine-6.0-latest
+    hostname: zabbix-server
+    ports:
+      - 10051:10051/tcp
+    environment:
+      DB_SERVER_HOST: YOUR_DB_IP
+      POSTGRES_DATABASE: YOUR_DB_DATABASE
+      POSTGRES_USER: YOUR_DB_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/ZABBIX_PASSWORD
+    secrets:
+      - ZABBIX_PASSWORD
+    networks:
+      - lan
+    deploy:
+      resources:
+        limits:
+          cpus: "0.70"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.secure_redirects=0
+      - net.ipv4.conf.all.send_redirects=0
+    privileged: true
+    restart: always
+
+  zabbix-web:
+    container_name: zabbix-web
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.0-latest
+    hostname: zabbix-web
+    ports:
+      - 8080:8080/tcp
+      - 8443:8443/tcp
+    environment:
+      DB_SERVER_HOST: YOUR_DB_IP
+      POSTGRES_USER: YOUR_DB_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/ZABBIX_PASSWORD
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_PORT: 10051
+    secrets:
+      - ZABBIX_PASSWORD
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - lan
+    depends_on:
+      - zabbix-server
+    deploy:
+      resources:
+        limits:
+          cpus: "0.70"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: always
+
+  zabbix-agent:
+    container_name: zabbix-agent
+    image: zabbix/zabbix-agent:alpine-6.0-latest
+    hostname: docker-zabbix-agent
+    ports:
+      - 10050:10050/tcp
+    environment:
+      ZBX_HOSTNAME: YOUR_HOSTNAME
+      ZBX_SERVER_HOST: zabbix-server
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+      mode: global
+    privileged: true
+    restart: always
+
+secrets:
+  ZABBIX_PASSWORD:
+    file: ./secrets/ZABBIX_PASSWORD
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24
