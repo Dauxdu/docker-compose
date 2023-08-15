@@ -3,7 +3,7 @@ services:
     container_name: watchtower
     image: containrrr/watchtower
     hostname: docker-watchtower
-    command: --cleanup --rolling-restart --schedule "0 6 * * 5"
+    command: --cleanup --rolling-restart  --schedule "0 0 6 ? * FRI"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/timezone:/etc/timezone:ro
