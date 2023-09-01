@@ -1,0 +1,34 @@
+services:
+  gitlab:
+    container_name: gitlab
+    image: gitlab/gitlab-ce
+    hostname: docker-gitlab
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+#      - 2222:22/tcp
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://git.example.com'
+#        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+    volumes:
+      - config:/etc/gitlab
+      - data:/var/opt/gitlab
+      - logs:/var/log/gitlab
+    networks:
+      - lan
+    shm_size: "256m"
+    restart: always
+
+volumes:
+  config: {}
+  data: {}
+  logs: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24
