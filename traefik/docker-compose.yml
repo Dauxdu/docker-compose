@@ -1,0 +1,157 @@
+#    labels:
+#      traefik.http.services.pihole.loadbalancer.server.port: 80
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:v2.10
+    hostname: docker-traefik
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.localhost`)
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.entrypoints=https
+
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.middlewares=authelia@docker
+
+    command:
+      - --global.sendAnonymousUsage=false
+      - --global.checkNewVersion=false
+
+      # Remove in production
+      - --api=true
+      - --api.insecure=false
+      - --api.dashboard=true
+
+      - --log=true
+      - --log.level=DEBUG
+      - --log.filepath=/config/traefik.log
+
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      - --entryPoints.http=true
+      - --entrypoints.http.address=:8080/tcp
+      - --entryPoints.http.http.redirections.entryPoint.to=https
+      - --entryPoints.http.http.redirections.entryPoint.scheme=https
+      - --entrypoints.https.address=:443
+
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --certificatesresolvers.le.acme.email=dauxdu@yandex.ru
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+
+      - "--pilot.dashboard=false"
+
+      ## Please see the Forwarded Header Trust section of the Authelia Traefik Integration documentation.
+      # - '--entryPoints.http.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7'
+      # - '--entryPoints.http.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7'
+      - "--entryPoints.http.forwardedHeaders.insecure=false"
+      - "--entryPoints.http.proxyProtocol.insecure=false"
+      - "--entryPoints.https=true"
+      - "--entryPoints.https.address=:8443/tcp"
+      ## Please see the Forwarded Header Trust section of the Authelia Traefik Integration documentation.
+      # - '--entryPoints.https.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7'
+      # - '--entryPoints.https.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/16,192.168.0.0/16,fc00::/7'
+      - "--entryPoints.https.forwardedHeaders.insecure=false"
+      - "--entryPoints.https.proxyProtocol.insecure=false"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - lan
+    restart: always
+
+authelia:
+  container_name: authelia
+  image: authelia/authelia
+  restart: unless-stopped
+  networks:
+    net: {}
+  expose:
+    - 9091
+  volumes:
+    - authelia:/config
+  environment:
+    TZ: "Australia/Melbourne"
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.authelia.rule=Host(`auth.localhost`)"
+    - "traefik.http.routers.authelia.entryPoints=https"
+    - "traefik.http.routers.authelia.tls=true"
+    - "traefik.http.middlewares.authelia.forwardAuth.address=http://authelia:9091/api/verify?rd=https%3A%2F%2Fauth.example.com%2F"
+    - "traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader=true"
+    - "traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+    - "traefik.http.middlewares.authelia-basic.forwardAuth.address=http://authelia:9091/api/verify?auth=basic"
+    - "traefik.http.middlewares.authelia-basic.forwardAuth.trustForwardHeader=true"
+    - "traefik.http.middlewares.authelia-basic.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+
+nextcloud:
+  container_name: nextcloud
+  image: linuxserver/nextcloud
+  restart: unless-stopped
+  networks:
+    net: {}
+  expose:
+    - 443
+  volumes:
+    - ./data/nextcloud/config:/config
+    - ./data/nextcloud/data:/data
+  environment:
+    PUID: "1000"
+    PGID: "1000"
+    TZ: "Australia/Melbourne"
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.localhost`)"
+    - "traefik.http.routers.nextcloud.entryPoints=https"
+    - "traefik.http.routers.nextcloud.tls=true"
+    - "traefik.http.routers.nextcloud.middlewares=authelia@docker"
+
+heimdall:
+  container_name: heimdall
+  image: linuxserver/heimdall
+  restart: unless-stopped
+  networks:
+    net: {}
+  expose:
+    - 443
+  volumes:
+    - ./data/heimdall/config:/config
+  environment:
+    PUID: "1000"
+    PGID: "1000"
+    TZ: "Australia/Melbourne"
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.heimdall.rule=Host(`heimdall.localhost`)"
+    - "traefik.http.routers.heimdall.entryPoints=https"
+    - "traefik.http.routers.heimdall.tls=true"
+    - "traefik.http.routers.heimdall.middlewares=authelia-basic@docker"
+
+  whoami:
+    image: traefik/whoami
+    container_name: whoami
+    labels:
+      traefik.enable: true
+      traefik.http.routers.whoami.rule: Host(`whoami.localhost`)
+      traefik.http.routers.whoami.entrypoints: http
+    networks:
+      - lan
+    restart: always
+
+volumes:
+  letsencrypt: {}
+  authelia: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24

@@ -1,0 +1,29 @@
+services:
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    hostname: grafana
+    ports:
+      - 3000:3000/tcp
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-clock-panel, alexanderzobnin-zabbix-app
+      - GF_SERVER_ROOT_URL=http://grafana.localhost"
+      - GF_SECURITY_ADMIN_PASSWORD=secret
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    volumes:
+      - grafana:/var/lib/grafana
+    networks:
+      - lan
+    restart: always
+
+volumes:
+  grafana: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24
