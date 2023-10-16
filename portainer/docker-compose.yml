@@ -1,16 +1,17 @@
 services:
-  container_name: portainer
-  image: portainer/portainer-ce
-  hostname: docker-portainer
-  ports:
-    - 8000:8000/tcp
-    - 9443:9443/tcp
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    - portainer:/data
-  networks:
-    - lan
-  restart: always
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    hostname: docker-portainer
+    ports:
+      - 8000:8000/tcp
+      - 9443:9443/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer:/data
+    networks:
+      - lan
+    restart: always
 
   portainer-agent:
     container_name: portainer-agent
