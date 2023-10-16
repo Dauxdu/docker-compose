@@ -17,9 +17,11 @@ Each application or service has its own directory within this repository, contai
 ## Available docker-compose Files
 Here is a list of the available docker-compose files included in this repository:
 
+- [Bitbucket](bitbucket/): Web-based platform for version control and collaboration.
 - [GitLab](gitlab/): Self-hosted Git repository management and collaboration platform.
 - [Heimdall](heimdall/): Application dashboard and launcher.
 - [Jenkins](jenkins/): Open-source automation server for CI/CD workflows.
+- [Jira](jira/): Project management and issue tracking platform.
 - [Nginx Proxy Manager](nginx-proxy-manager/): Web-based GUI to manage Nginx reverse proxy.
 - [Pi-hole](pihole/): Network-wide ad blocker.
 - [Portainer](portainer/): Docker management GUI.
