@@ -12,6 +12,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       - lan
+    restart: always
 
   postgres:
     container_name: postgres
