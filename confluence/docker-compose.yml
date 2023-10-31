@@ -1,0 +1,51 @@
+services:
+  confluence:
+    container_name: confluence
+    image: atlassian/confluence-server
+    hostname: docker-confluence
+    ports:
+      - 8090:8090/tcp
+      - 8091:8091/tcp
+    volumes:
+      - confluence:/var/atlassian/application-data/confluence
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - lan
+    restart: always
+
+  postgres:
+    container_name: postgres
+    image: postgres:15.3-alpine
+    hostname: docker-postgres
+    ports:
+      - 5432:5432/tcp
+    environment:
+      PGDATA: /data/postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+    secrets:
+      - POSTGRES_PASSWORD
+    volumes:
+      - postgres:/data/postgres
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - lan
+    restart: always
+
+secrets:
+  POSTGRES_PASSWORD:
+    file: ./secrets/POSTGRES_PASSWORD
+
+volumes:
+  confluence: {}
+  postgres: {}
+
+networks:
+  lan:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 11.11.11.0/24
