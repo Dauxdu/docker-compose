@@ -8,7 +8,9 @@
 ## Usage
 Each application or service has its own directory within this repository, containing a docker-compose.yml file and any associated configuration files. To deploy an application, simply navigate to its directory and run the following command:
 
-  `docker-compose up -d`
+  ``` Bash
+  docker-compose up -d
+  ```
 
 🎉 This will start the necessary containers in the background. You can then access the application using the appropriate URL or port, as specified in the documentation of each application.
 ## Available docker-compose Files
