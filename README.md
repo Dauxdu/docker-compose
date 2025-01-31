@@ -22,6 +22,7 @@ Each application or service has its own directory within this repository, contai
 - [Heimdall](heimdall/): Application dashboard and launcher.
 - [Jenkins](jenkins/): Open-source automation server for CI/CD workflows.
 - [Jira](jira/): Project management and issue tracking platform.
+- [Minecraft](minecraft/): Quick Minecraft server deployment.
 - [Nginx Proxy Manager](nginx-proxy-manager/): Web-based GUI to manage Nginx reverse proxy.
 - [Pi-hole](pihole/): Network-wide ad blocker.
 - [Portainer](portainer/): Docker management GUI.
