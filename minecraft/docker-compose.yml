@@ -51,7 +51,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       - mc-srv
-    restart: always
+    restart: unless-stopped
 
   minecraft-srv2:
     container_name: mc-srv2
@@ -104,7 +104,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       - mc-srv
-    restart: always
+    restart: unless-stopped
 
 volumes:
   mc-1.21.4: {}
