@@ -1,0 +1,1 @@
+sudo mount -t cifs "//path/to/media" /mnt/smb-mount -o username=your_username,password=your_password,uid=1000,gid=1000
