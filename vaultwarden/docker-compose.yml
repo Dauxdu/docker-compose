@@ -1,10 +1,35 @@
 services:
+  traefik:
+    image: traefik:v3
+    container_name: traefik
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - traefik-public
+    restart: unless-stopped
+    command:
+      - --api.insecure=false
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --certificatesresolvers.le.acme.email=${EMAIL?Variable not set}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --log.level=ERROR
+      - --accesslog=true
+
   vaultwarden:
     container_name: vaultwarden
     image: vaultwarden/server
     hostname: docker-vaultwarden
-    ports:
-      - 80:80/tcp
+    expose:
+      - 80/tcp
     environment:
       ADMIN_TOKEN_FILE: /run/secrets/VAULTWARDEN_PASSWORD
       SIGNUPS_ALLOWED: true
@@ -13,8 +38,19 @@ services:
     volumes:
       - vaultwarden:/data
     networks:
-      - lan
+      - traefik-public
     restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vw-http.rule=Host(`${DOMAIN?Variable not set}`)
+      - traefik.http.routers.vw-http.entrypoints=http
+      - traefik.http.routers.vw-http.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.vw-https.rule=Host(`${DOMAIN?Variable not set}`
+      - traefik.http.routers.vw-https.entrypoints=https
+      - traefik.http.routers.vw-https.tls=true
+      - traefik.http.routers.vw-https.tls.certresolver=le
+      - traefik.http.services.vw.loadbalancer.server.port=80
 
 secrets:
   VAULTWARDEN_PASSWORD:
@@ -22,9 +58,10 @@ secrets:
 
 volumes:
   vaultwarden: {}
+  letsencrypt: {}
 
 networks:
-  lan:
+  traefik-public:
     driver: bridge
     ipam:
       driver: default
