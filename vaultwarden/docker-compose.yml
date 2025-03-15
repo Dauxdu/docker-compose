@@ -46,7 +46,7 @@ services:
       - traefik.http.routers.vw-http.entrypoints=http
       - traefik.http.routers.vw-http.middlewares=https-redirect
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.vw-https.rule=Host(`${DOMAIN?Variable not set}`
+      - traefik.http.routers.vw-https.rule=Host(`${DOMAIN?Variable not set}`)
       - traefik.http.routers.vw-https.entrypoints=https
       - traefik.http.routers.vw-https.tls=true
       - traefik.http.routers.vw-https.tls.certresolver=le
